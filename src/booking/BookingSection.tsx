@@ -1,7 +1,8 @@
 import { CalendarDays, MapPin, MessageCircle, Phone } from 'lucide-react'
 import { contact } from '../content'
 import { ChapterLabel } from '../components/ui/ChapterLabel'
-import { Monogram, WhatsAppIcon } from '../components/ui/Icons'
+import { WhatsAppIcon } from '../components/ui/Icons'
+import { LogoMark } from '../components/ui/Logo'
 import { MaskWords, Reveal } from '../components/ui/Reveal'
 import { enquiryLink } from '../lib/whatsapp'
 import { BookingWizard } from './BookingWizard'
@@ -17,7 +18,7 @@ export function BookingSection() {
     <section id="book" aria-labelledby="book-title" className="relative overflow-hidden bg-ink py-28 text-ivory md:py-40">
       <div aria-hidden className="pointer-events-none absolute -right-60 -top-60 h-[700px] w-[700px] rounded-full bg-gold/10 blur-3xl" />
       <div aria-hidden className="pointer-events-none absolute -bottom-72 -left-40 h-[600px] w-[600px] rounded-full bg-wine/40 blur-3xl" />
-      <Monogram className="pointer-events-none absolute -left-24 top-24 hidden h-[420px] w-[420px] opacity-[0.05] lg:block" />
+      <LogoMark className="pointer-events-none absolute -left-28 top-24 hidden w-[560px] opacity-[0.06] lg:block" />
 
       <div className="container-luxe relative grid gap-16 lg:grid-cols-12 lg:gap-12">
         <div className="lg:col-span-5 lg:pt-6">
@@ -32,7 +33,8 @@ export function BookingSection() {
           </h2>
           <Reveal delay={0.2}>
             <p className="mt-6 max-w-md text-lg font-light leading-relaxed text-ivory/65">
-              Book a consultation or fitting in under a minute. Your request goes straight to Rachy on WhatsApp.
+              Book a consultation or fitting in under a minute. Your request goes straight to Rachy, and she confirms
+              every appointment personally.
             </p>
           </Reveal>
 

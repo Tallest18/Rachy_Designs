@@ -22,8 +22,8 @@ export function Craft() {
             className="absolute left-0 top-0 aspect-[3/4] w-[66%] overflow-hidden rounded-[28px] shadow-[0_40px_80px_-40px_rgba(18,16,14,0.5)]"
           >
             <motion.img
-              src={images.custom}
-              alt="Emerald cape gown with gold embellishment"
+              src={images.craftMain}
+              alt="Black pinafore dress with gold tassels over a sky-blue shirt"
               style={{ scale: backScale }}
               className="h-full w-full object-cover"
               loading="lazy"
@@ -34,8 +34,8 @@ export function Craft() {
             className="absolute bottom-0 right-0 aspect-[3/4] w-[50%] overflow-hidden rounded-t-[999px] rounded-b-[24px] border-[6px] border-cream shadow-[0_40px_80px_-30px_rgba(18,16,14,0.55)]"
           >
             <img
-              src={images.ready}
-              alt="Magenta wrap dress with balloon sleeves"
+              src={images.craftAccent}
+              alt="Chocolate-brown oversized shirt and wide-leg trouser set"
               className="h-full w-full object-cover"
               loading="lazy"
             />

@@ -1,6 +1,6 @@
 import clsx from 'clsx'
-import { ArrowUpRight, ChevronLeft, ChevronRight, Expand, X } from 'lucide-react'
-import { AnimatePresence, motion } from 'motion/react'
+import { ArrowUpRight, ChevronLeft, ChevronRight, Expand, Play, X } from 'lucide-react'
+import { AnimatePresence, motion, useInView, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { contact, gallery, type GalleryItem } from '../../content'
 import { pad2 } from '../../lib/format'
@@ -14,6 +14,37 @@ const shapeClass: Record<GalleryItem['shape'], string> = {
   tall: 'aspect-[3/4.4]',
   portrait: 'aspect-[3/4]',
   square: 'aspect-square',
+}
+
+/**
+ * Silent looping video tile. It only downloads and plays while on screen, so it
+ * doesn't slow the page; visitors who prefer reduced motion see the cover image.
+ */
+function GalleryVideo({ item, className }: { item: GalleryItem; className: string }) {
+  const ref = useRef<HTMLVideoElement>(null)
+  const inView = useInView(ref, { margin: '100px 0px' })
+  const reduce = useReducedMotion()
+
+  useEffect(() => {
+    const video = ref.current
+    if (!video) return
+    if (inView && !reduce) video.play().catch(() => {})
+    else video.pause()
+  }, [inView, reduce])
+
+  return (
+    <video
+      ref={ref}
+      src={item.video}
+      poster={item.src}
+      aria-label={item.alt}
+      muted
+      loop
+      playsInline
+      preload="none"
+      className={className}
+    />
+  )
 }
 
 export function Work() {
@@ -64,16 +95,31 @@ export function Work() {
                 className="group relative block w-full overflow-hidden rounded-[22px] bg-sand text-left"
                 aria-label={`View ${item.title}`}
               >
-                <img
-                  src={item.src}
-                  alt={item.alt}
-                  loading="lazy"
-                  className={clsx(
-                    'w-full object-cover object-top transition-transform duration-[1.4s] ease-luxe group-hover:scale-[1.06]',
-                    shapeClass[item.shape],
-                  )}
-                />
+                {item.video ? (
+                  <GalleryVideo
+                    item={item}
+                    className={clsx(
+                      'w-full object-cover object-top transition-transform duration-[1.4s] ease-luxe group-hover:scale-[1.06]',
+                      shapeClass[item.shape],
+                    )}
+                  />
+                ) : (
+                  <img
+                    src={item.src}
+                    alt={item.alt}
+                    loading="lazy"
+                    className={clsx(
+                      'w-full object-cover object-top transition-transform duration-[1.4s] ease-luxe group-hover:scale-[1.06]',
+                      shapeClass[item.shape],
+                    )}
+                  />
+                )}
                 <span className="absolute inset-0 bg-linear-to-t from-ink/75 via-ink/0 to-transparent opacity-90 transition-opacity duration-500 group-hover:opacity-100" />
+                {item.video && (
+                  <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-ink/60 px-3 py-1.5 font-display text-[0.55rem] tracking-[0.25em] text-ivory backdrop-blur-md">
+                    <Play className="h-3 w-3 fill-current" /> VIDEO
+                  </span>
+                )}
                 <span className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-4 p-6">
                   <span>
                     <span className="block font-display text-[0.58rem] tracking-[0.34em] text-gold-light">
@@ -178,11 +224,24 @@ function Lightbox({ index, onClose, onStep }: { index: number | null; onClose: (
               className="flex max-h-full flex-col items-center"
               onClick={(e) => e.stopPropagation()}
             >
-              <img
-                src={item.src}
-                alt={item.alt}
-                className="h-auto max-h-[76svh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
-              />
+              {item.video ? (
+                <video
+                  src={item.video}
+                  poster={item.src}
+                  aria-label={item.alt}
+                  controls
+                  autoPlay
+                  loop
+                  playsInline
+                  className="h-[min(76svh,720px)] w-auto max-w-full rounded-2xl bg-ink object-contain shadow-2xl"
+                />
+              ) : (
+                <img
+                  src={item.src}
+                  alt={item.alt}
+                  className="h-auto max-h-[76svh] w-auto max-w-full rounded-2xl object-contain shadow-2xl"
+                />
+              )}
               <figcaption className="mt-5 text-center">
                 <span className="block font-display text-[0.58rem] tracking-[0.34em] text-gold-light">
                   {item.category.toUpperCase()} · {pad2(index! + 1)} / {pad2(gallery.length)}

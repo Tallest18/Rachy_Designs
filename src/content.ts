@@ -21,23 +21,29 @@ import {
   Spool,
 } from 'lucide-react'
 
-import bespokeImg from './assets/images/bespoke.webp'
-import corporateImg from './assets/images/corporate.webp'
-import customImg from './assets/images/custom.webp'
+import ankaraRuffleImg from './assets/images/ankara-ruffle-top.webp'
+import beadedCorsetImg from './assets/images/beaded-corset-ankara.webp'
+import loungeSetImg from './assets/images/chocolate-lounge-set.webp'
 import gownImg from './assets/images/gown-detail.webp'
-import readyImg from './assets/images/ready-to-wear.webp'
+import limeTwoPieceImg from './assets/images/lime-two-piece.webp'
+import pinstripeImg from './assets/images/pinstripe-suit.webp'
+import printBlouseImg from './assets/images/print-blouse-wide-leg.webp'
+import tasselPortraitImg from './assets/images/tassel-pinafore-portrait.webp'
+import tasselSeatedImg from './assets/images/tassel-pinafore-seated.webp'
+import tealLacePoster from './assets/videos/teal-lace-corset-dress-poster.webp'
+import tealLaceVideo from './assets/videos/teal-lace-corset-dress.mp4'
 import { toRoman } from './lib/format'
 
 /* ─── Photos ──────────────────────────────────────────────────────────────────
  * Drop new photos into src/assets/images and import them here.
- * Tip: export photos at least 1200px on the long edge (.webp or .jpg).
+ * Tip: export photos at least 1000px on the long edge (.webp or .jpg).
  */
 export const images = {
-  bespoke: bespokeImg,
-  corporate: corporateImg,
-  custom: customImg,
+  /** Hero: draped gown on a dress form with a tailor's tape */
   gown: gownImg,
-  ready: readyImg,
+  /** "The Craft" section: large image + small arched image */
+  craftMain: tasselPortraitImg,
+  craftAccent: loungeSetImg,
 }
 
 /* ─── Brand ─────────────────────────────────────────────────────────────── */
@@ -131,8 +137,8 @@ export const services: Service[] = [
     short: 'One-of-a-kind occasion pieces',
     description:
       'Exquisite, one-of-a-kind creations tailored to perfection for life’s most special moments: weddings, owambe, galas and milestone celebrations.',
-    image: bespokeImg,
-    alt: 'Champagne lace off-shoulder gown with a flowing train',
+    image: beadedCorsetImg,
+    alt: 'Black beaded corset top with cap sleeves, paired with a floral Ankara pencil skirt',
     icon: Crown,
   },
   {
@@ -142,8 +148,8 @@ export const services: Service[] = [
     short: 'Trendy pieces for everyday life',
     description:
       'Trendy, stylish and comfortable pieces made to fit your everyday life. Easy to wear and impossible to ignore.',
-    image: readyImg,
-    alt: 'Magenta wrap dress with dramatic balloon sleeves',
+    image: loungeSetImg,
+    alt: 'Chocolate-brown oversized shirt and wide-leg trouser set',
     icon: Shirt,
   },
   {
@@ -153,8 +159,8 @@ export const services: Service[] = [
     short: 'Sharp workwear & relaxed casuals',
     description:
       'Sharp, professional outfits that command confidence and elevate your brand, plus polished casual wear that keeps you looking put-together off the clock.',
-    image: corporateImg,
-    alt: 'Tailored burgundy trouser suit worn with a black blouse',
+    image: pinstripeImg,
+    alt: 'Tailored pinstripe trouser suit with wide-leg trousers',
     icon: Briefcase,
   },
   {
@@ -164,8 +170,8 @@ export const services: Service[] = [
     short: 'Made-to-measure, designed around you',
     description:
       'Made-to-measure outfits designed around your style, measurements and preferences. Bring a picture, a sketch or just a feeling and we’ll create it together.',
-    image: customImg,
-    alt: 'Emerald green cape gown with gold embellishment',
+    image: tasselSeatedImg,
+    alt: 'Black pinafore dress decorated with gold tassels, worn over a sky-blue shirt',
     icon: Palette,
   },
   {
@@ -223,8 +229,9 @@ export const processSteps: { title: string; body: string; icon: LucideIcon }[] =
 ]
 
 /* ─── Our Work gallery ──────────────────────────────────────────────────────
- * These are the looks from the flyer. Replace / add photos of finished pieces.
- * `shape` controls the tile proportions in the masonry grid.
+ * Photos of finished pieces. Add more by importing a photo above and adding
+ * an entry here. `shape` controls the tile proportions in the masonry grid.
+ * For a video tile, set `video` to an imported .mp4 and `src` to a cover image.
  */
 export interface GalleryItem {
   src: string
@@ -232,43 +239,73 @@ export interface GalleryItem {
   category: string
   alt: string
   shape: 'tall' | 'portrait' | 'square'
+  video?: string
 }
 
 export const gallery: GalleryItem[] = [
   {
-    src: bespokeImg,
-    title: 'Champagne Lace Gown',
-    category: 'Bespoke',
-    alt: 'Champagne lace off-shoulder gown with a flowing satin train',
+    src: tasselSeatedImg,
+    title: 'Tasselled Pinafore Dress',
+    category: 'Custom',
+    alt: 'Black pinafore dress decorated with gold tassels over a sky-blue shirt, model seated on a stool',
     shape: 'tall',
   },
   {
-    src: corporateImg,
-    title: 'The Burgundy Power Suit',
+    src: pinstripeImg,
+    title: 'The Pinstripe Suit',
     category: 'Corporate',
-    alt: 'Tailored burgundy trouser suit with a black blouse and gold belt',
+    alt: 'Tailored pinstripe trouser suit with wide-leg trousers, worn with white heels',
     shape: 'portrait',
   },
   {
-    src: customImg,
-    title: 'Emerald Cape Gown',
-    category: 'Custom',
-    alt: 'Emerald green cape gown with gold appliqué on the bodice',
+    src: beadedCorsetImg,
+    title: 'Beaded Corset & Ankara Skirt',
+    category: 'Bespoke',
+    alt: 'Black beaded corset top with cap sleeves and a floral Ankara pencil skirt, with matching head wrap',
+    shape: 'portrait',
+  },
+  {
+    src: tealLacePoster,
+    video: tealLaceVideo,
+    title: 'Teal Lace Corset Dress',
+    category: 'In motion',
+    alt: 'Teal lace dress with a structured corset bodice of Ankara-print panels',
     shape: 'tall',
   },
   {
-    src: gownImg,
-    title: 'Draped Champagne Silk',
-    category: 'In the studio',
-    alt: 'One-shoulder draped gown with beaded embroidery on a dress form',
+    src: limeTwoPieceImg,
+    title: 'Lime Zip Jacket & Skirt',
+    category: 'Corporate',
+    alt: 'Lime-green zip-front cropped jacket with a matching pencil skirt and black top',
+    shape: 'portrait',
+  },
+  {
+    src: loungeSetImg,
+    title: 'Chocolate Two-Piece',
+    category: 'Ready-to-Wear',
+    alt: 'Chocolate-brown oversized shirt and wide-leg trouser set',
     shape: 'square',
   },
   {
-    src: readyImg,
-    title: 'Magenta Wrap Dress',
-    category: 'Ready-to-Wear',
-    alt: 'Magenta wrap dress with balloon sleeves and a side tie',
+    src: printBlouseImg,
+    title: 'Cowl Blouse & Wide-Leg Trousers',
+    category: 'Casual',
+    alt: 'Orange and black abstract-print cowl-neck blouse with high-waisted red wide-leg trousers',
+    shape: 'tall',
+  },
+  {
+    src: ankaraRuffleImg,
+    title: 'Ankara Ruffle Top',
+    category: 'Custom',
+    alt: 'Geometric Ankara print top with ruffled side panels over a black skirt',
     shape: 'portrait',
+  },
+  {
+    src: gownImg,
+    title: 'On the Dress Form',
+    category: 'In the studio',
+    alt: 'One-shoulder draped gown with beaded embroidery on a dress form with a measuring tape',
+    shape: 'square',
   },
 ]
 

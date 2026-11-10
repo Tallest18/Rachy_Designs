@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { brand } from '../content'
 import { EASE, EASE_IN_OUT } from '../lib/motion'
 import { lockScroll, unlockScroll } from '../lib/scroll'
-import { Monogram } from './ui/Icons'
+import { LogoMark } from './ui/Logo'
 
 const LETTERS = 'RACHY'.split('')
 
@@ -49,11 +49,11 @@ export function Preloader({ onReveal, onDone }: { onReveal: () => void; onDone: 
             transition={{ duration: 0.8, ease: EASE_IN_OUT }}
           >
             <motion.div
-              initial={{ opacity: 0, scale: 0.6, rotate: -90 }}
-              animate={{ opacity: 1, scale: 1, rotate: 0 }}
+              initial={{ opacity: 0, scale: 0.8, y: 16, filter: 'blur(6px)' }}
+              animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
               transition={{ duration: 1.2, ease: EASE }}
             >
-              <Monogram className="h-16 w-16" />
+              <LogoMark className="h-20 w-auto sm:h-24" />
             </motion.div>
 
             <h2 className="mt-8 flex overflow-hidden font-display text-4xl tracking-[0.32em] sm:text-6xl" aria-hidden>

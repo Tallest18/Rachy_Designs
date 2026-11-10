@@ -5,7 +5,10 @@ import {
   CalendarPlus,
   Check,
   Info,
+  LoaderCircle,
+  MailCheck,
   MapPin,
+  Phone,
   Pencil,
   RotateCcw,
   Sun,
@@ -17,13 +20,13 @@ import { AnimatePresence, motion, type Variants } from 'motion/react'
 import { useEffect, useId, useRef, useState, type ReactNode } from 'react'
 import { Button, ButtonLink } from '../components/ui/Button'
 import { WhatsAppIcon } from '../components/ui/Icons'
-import { appointmentModes, occasions, services, timeSlots } from '../content'
+import { appointmentModes, contact, occasions, services, timeSlots } from '../content'
 import { addDays, formatLong, startOfDay, toInputDate } from '../lib/date'
 import { EASE } from '../lib/motion'
 import { scrollToId } from '../lib/scroll'
 import { whatsappLink } from '../lib/whatsapp'
 import { Calendar } from './Calendar'
-import { STEPS, useBooking, type BookingData } from './context'
+import { STEPS, useBooking, type BookingData, type Submission } from './context'
 import {
   buildBookingMessage,
   downloadCalendarFile,
@@ -33,6 +36,10 @@ import {
   serviceTitle,
   slotInfo,
 } from './message'
+import { notificationsEnabled, notifyOwner } from './notify'
+
+/** Submissions completed faster than this are almost certainly bots. */
+const MIN_HUMAN_MS = 4000
 
 type Errors = Partial<Record<keyof BookingData, string>>
 
@@ -245,12 +252,133 @@ function SummaryRow({ label, children, onEdit }: { label: string; children: Reac
   )
 }
 
+/* ───────────────────────── Finished screen ───────────────────────── */
+
+function Finished({
+  submission,
+  data,
+  whatsappHref,
+  focus,
+  retrying,
+  onRetry,
+  onReset,
+}: {
+  submission: Submission
+  data: BookingData
+  whatsappHref: string
+  focus: boolean
+  retrying: boolean
+  onRetry: () => void
+  onReset: () => void
+}) {
+  const [openedWhatsApp, setOpenedWhatsApp] = useState(false)
+  const notified = submission.status === 'notified'
+  const failed = submission.status === 'failed'
+  const firstName = data.name.trim().split(/\s+/)[0]
+  const ref = submission.reference ?? ''
+
+  const copy = notified
+    ? {
+        eyebrow: `Booking received · ${ref}`,
+        title: 'Rachy has your booking',
+        body: `Thank you, ${firstName}! Your request is with Rachy Designs, and she’ll confirm your appointment on WhatsApp or by phone (${data.phone.trim()}) shortly.`,
+      }
+    : failed
+      ? {
+          eyebrow: `One last step · ${ref}`,
+          title: 'Send your booking on WhatsApp',
+          body: 'We couldn’t reach our booking inbox just now, so please send your booking on WhatsApp instead. Your details are already written for you; just press send.',
+        }
+      : {
+          eyebrow: `One last step · ${ref}`,
+          title: 'Press send in WhatsApp',
+          body: 'WhatsApp has opened with your booking details already written. Press send so Rachy receives it, and she’ll confirm your appointment personally.',
+        }
+
+  return (
+    <div className="py-2 text-center">
+      <motion.div
+        initial={{ scale: 0, rotate: -30 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.15 }}
+        className={clsx(
+          'mx-auto mb-8 grid h-20 w-20 place-items-center rounded-full shadow-[0_20px_40px_-15px_rgba(184,138,62,0.8)]',
+          notified ? 'bg-gold-gradient text-ink' : 'bg-whatsapp text-white',
+        )}
+      >
+        {notified ? <MailCheck className="h-9 w-9" strokeWidth={1.6} /> : <WhatsAppIcon className="h-9 w-9" />}
+      </motion.div>
+
+      <StepHeading eyebrow={copy.eyebrow} title={copy.title} focus={focus} center />
+      <p className="mx-auto mt-4 max-w-md leading-relaxed text-muted" role="status">
+        {copy.body}
+      </p>
+      {notified && (
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted">
+          Want to share pictures of styles you love? Continue the chat on WhatsApp.
+        </p>
+      )}
+
+      <div className="mt-8 flex flex-wrap justify-center gap-3">
+        <ButtonLink
+          href={whatsappHref}
+          target="_blank"
+          rel="noopener noreferrer"
+          variant={notified ? 'ghost' : 'gold'}
+          onClick={() => setOpenedWhatsApp(true)}
+        >
+          <WhatsAppIcon className="h-4 w-4" />
+          {notified ? 'Continue on WhatsApp' : failed ? 'Send on WhatsApp' : 'Open WhatsApp again'}
+        </ButtonLink>
+        {failed ? (
+          <Button variant="ghost" onClick={onRetry} disabled={retrying} aria-busy={retrying}>
+            {retrying ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <RotateCcw className="h-4 w-4" />}
+            {retrying ? 'Retrying…' : 'Try again'}
+          </Button>
+        ) : (
+          <Button variant="ghost" onClick={() => downloadCalendarFile(data)}>
+            <CalendarPlus className="h-4 w-4" /> Add to calendar
+          </Button>
+        )}
+      </div>
+
+      {!notified && openedWhatsApp && (
+        <motion.p
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mx-auto mt-5 max-w-sm text-sm text-umber"
+        >
+          Sent it? You’re all set. Rachy will be in touch to confirm.
+        </motion.p>
+      )}
+
+      <p className="mt-6 text-sm text-muted">
+        Questions? Call{' '}
+        <a href={contact.phoneHref} className="inline-flex items-center gap-1 text-ink underline-offset-4 hover:underline">
+          <Phone className="h-3.5 w-3.5" /> {contact.phoneDisplay}
+        </a>
+      </p>
+
+      <button
+        type="button"
+        onClick={onReset}
+        className="mt-6 inline-flex items-center gap-2 text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
+      >
+        <RotateCcw className="h-3.5 w-3.5" /> Start a new booking
+      </button>
+    </div>
+  )
+}
+
 /* ───────────────────────── The wizard ───────────────────────── */
 
 export function BookingWizard() {
-  const { data, update, step, direction, goTo, sent, setSent, reset } = useBooking()
+  const { data, update, step, direction, goTo, reference, submission, setSubmission, reset } = useBooking()
   const [errors, setErrors] = useState<Errors>({})
   const [interacted, setInteracted] = useState(false)
+  const [trap, setTrap] = useState('')
+  const [startedAt] = useState(() => Date.now())
+  const [retrying, setRetrying] = useState(false)
   const [today] = useState(() => startOfDay(new Date()))
   const minDate = addDays(today, 1)
   const maxDate = addDays(today, 120)
@@ -284,10 +412,38 @@ export function BookingWizard() {
     jump(step + 1)
   }
 
-  const send = () => {
-    window.open(whatsappLink(buildBookingMessage(data)), '_blank', 'noopener,noreferrer')
+  const submitting = submission.status === 'submitting'
+  const done = submission.status !== 'idle' && !submitting
+  const whatsappHref = whatsappLink(buildBookingMessage(data, reference))
+
+  /** Emails the booking to Rachy. Only updates state if this booking is still the current one. */
+  const deliver = async (): Promise<Submission> => {
+    const looksLikeBot = trap.trim() !== '' || Date.now() - startedAt < MIN_HUMAN_MS
+    if (looksLikeBot) return { status: 'notified', reference } // silently drop, but look successful
+    const result = await notifyOwner(data, reference)
+    return result.ok ? { status: 'notified', reference } : { status: 'failed', reference, error: result.error }
+  }
+
+  const confirm = async () => {
+    if (submitting) return
     setInteracted(true)
-    setSent(true)
+    setSubmission({ status: 'submitting', reference })
+    const outcome = await deliver()
+    setSubmission((prev) => (prev.reference === reference && prev.status === 'submitting' ? outcome : prev))
+  }
+
+  const retry = async () => {
+    if (retrying) return
+    setRetrying(true)
+    const outcome = await deliver()
+    setRetrying(false)
+    setSubmission((prev) => (prev.reference === reference ? outcome : prev))
+  }
+
+  /** Without email alerts configured, the WhatsApp message IS the booking. */
+  const handOffToWhatsApp = () => {
+    setInteracted(true)
+    setSubmission({ status: 'whatsapp-only', reference })
   }
 
   const slot = slotInfo(data)
@@ -298,12 +454,19 @@ export function BookingWizard() {
       ref={cardRef}
       className="relative rounded-[32px] bg-ivory p-6 text-ink shadow-[0_60px_120px_-50px_rgba(0,0,0,0.85)] ring-1 ring-gold/20 sm:p-10"
     >
-      {!sent && <Stepper step={step} onJump={jump} />}
+      {import.meta.env.DEV && !notificationsEnabled && (
+        <p className="mb-6 rounded-2xl border border-dashed border-wine/40 px-4 py-3 text-xs leading-relaxed text-wine">
+          <strong>Developer note:</strong> email alerts are off, so bookings only reach Rachy if the client presses
+          send in WhatsApp. Add a Web3Forms key in <code>src/content.ts</code> (<code>bookingNotifications</code>).
+          This note is never shown on the live site.
+        </p>
+      )}
+      {!done && <Stepper step={step} onJump={(i) => !submitting && jump(i)} />}
 
-      <div className={clsx(!sent && 'mt-9')}>
+      <div className={clsx(!done && 'mt-9')}>
         <AnimatePresence mode="wait" custom={direction} initial={false}>
           <motion.div
-            key={sent ? 'sent' : step}
+            key={done ? 'done' : step}
             custom={direction}
             variants={slide}
             initial="enter"
@@ -311,7 +474,7 @@ export function BookingWizard() {
             exit="exit"
           >
             {/* ── Step 1: Service ── */}
-            {!sent && step === 0 && (
+            {!done && step === 0 && (
               <>
                 <StepHeading eyebrow="Step 1 of 4" title="What would you like made?" focus={interacted} />
                 <div role="radiogroup" aria-label="Service" className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -360,7 +523,7 @@ export function BookingWizard() {
             )}
 
             {/* ── Step 2: Schedule ── */}
-            {!sent && step === 1 && (
+            {!done && step === 1 && (
               <>
                 <StepHeading eyebrow="Step 2 of 4" title="When suits you?" focus={interacted} />
 
@@ -452,7 +615,7 @@ export function BookingWizard() {
             )}
 
             {/* ── Step 3: Details ── */}
-            {!sent && step === 2 && (
+            {!done && step === 2 && (
               <>
                 <StepHeading eyebrow="Step 3 of 4" title="Tell us about you" focus={interacted} />
                 <div className="mt-7 grid gap-x-8 gap-y-7 sm:grid-cols-2">
@@ -536,12 +699,27 @@ export function BookingWizard() {
                       />
                     )}
                   </Field>
+
+                  {/* Honeypot: invisible to people, irresistible to spam bots. */}
+                  <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
+                    <label>
+                      Company website
+                      <input
+                        type="text"
+                        name="company_website"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        value={trap}
+                        onChange={(e) => setTrap(e.target.value)}
+                      />
+                    </label>
+                  </div>
                 </div>
               </>
             )}
 
             {/* ── Step 4: Confirm ── */}
-            {!sent && step === 3 && (
+            {!done && step === 3 && (
               <>
                 <StepHeading eyebrow="Step 4 of 4" title="Review your booking" focus={interacted} />
                 <dl className="mt-6 divide-y divide-ink/10 rounded-2xl border border-ink/10 bg-white/50">
@@ -574,56 +752,37 @@ export function BookingWizard() {
                 </dl>
                 <p className="mt-6 flex gap-3 rounded-2xl bg-gold-pale/50 p-4 text-sm leading-relaxed text-umber">
                   <Info className="mt-0.5 h-4 w-4 shrink-0 text-gold-deep" />
-                  The button below opens WhatsApp with your booking details ready to send. Your appointment is
-                  confirmed once Rachy replies.
+                  {notificationsEnabled
+                    ? 'Rachy is notified the moment you confirm. You can then continue the conversation on WhatsApp. Your appointment is confirmed once she replies.'
+                    : 'The button below opens WhatsApp with your booking details ready. Press send in WhatsApp so Rachy receives it. Your appointment is confirmed once she replies.'}
                 </p>
               </>
             )}
 
-            {/* ── Sent ── */}
-            {sent && (
-              <div className="py-4 text-center">
-                <motion.div
-                  initial={{ scale: 0, rotate: -30 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.15 }}
-                  className="mx-auto mb-8 grid h-20 w-20 place-items-center rounded-full bg-gold-gradient text-ink shadow-[0_20px_40px_-15px_rgba(184,138,62,0.8)]"
-                >
-                  <Check className="h-9 w-9" strokeWidth={1.75} />
-                </motion.div>
-                <StepHeading eyebrow="Almost done" title="Just hit send on WhatsApp" focus={interacted} center />
-                <p className="mx-auto mt-4 max-w-md leading-relaxed text-muted">
-                  WhatsApp has opened with your booking details. Send the message and Rachy will confirm your appointment
-                  personally. Feel free to add pictures of styles you love in the same chat.
-                </p>
-                <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  <ButtonLink href={whatsappLink(buildBookingMessage(data))} target="_blank" rel="noopener noreferrer">
-                    <WhatsAppIcon className="h-4 w-4" /> Open WhatsApp again
-                  </ButtonLink>
-                  <Button variant="ghost" onClick={() => downloadCalendarFile(data)}>
-                    <CalendarPlus className="h-4 w-4" /> Add to calendar
-                  </Button>
-                </div>
-                <button
-                  type="button"
-                  onClick={reset}
-                  className="mt-8 inline-flex items-center gap-2 text-sm text-muted underline-offset-4 hover:text-ink hover:underline"
-                >
-                  <RotateCcw className="h-3.5 w-3.5" /> Start a new booking
-                </button>
-              </div>
+            {/* ── Finished ── */}
+            {done && (
+              <Finished
+                submission={submission}
+                data={data}
+                whatsappHref={whatsappHref}
+                focus={interacted}
+                retrying={retrying}
+                onRetry={retry}
+                onReset={reset}
+              />
             )}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {!sent && (
+      {!done && (
         <div className="mt-10 flex items-center justify-between gap-4 border-t border-ink/10 pt-6">
           {step > 0 ? (
             <button
               type="button"
               onClick={() => jump(step - 1)}
-              className="inline-flex items-center gap-2 font-display text-[0.66rem] tracking-[0.24em] text-ink/65 transition hover:text-ink"
+              disabled={submitting}
+              className="inline-flex items-center gap-2 font-display text-[0.66rem] tracking-[0.24em] text-ink/65 transition hover:text-ink disabled:opacity-30"
             >
               <ArrowLeft className="h-4 w-4" /> BACK
             </button>
@@ -634,10 +793,28 @@ export function BookingWizard() {
             <Button onClick={next}>
               Continue <ArrowRight className="h-4 w-4 transition-transform duration-500 group-hover/btn:translate-x-1" />
             </Button>
-          ) : (
-            <Button variant="gold" onClick={send}>
-              <WhatsAppIcon className="h-4 w-4" /> Send on WhatsApp
+          ) : notificationsEnabled ? (
+            <Button variant="gold" onClick={confirm} disabled={submitting} aria-busy={submitting}>
+              {submitting ? (
+                <>
+                  <LoaderCircle className="h-4 w-4 animate-spin" /> Sending…
+                </>
+              ) : (
+                <>
+                  Confirm booking <Check className="h-4 w-4" />
+                </>
+              )}
             </Button>
+          ) : (
+            <ButtonLink
+              variant="gold"
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={handOffToWhatsApp}
+            >
+              <WhatsAppIcon className="h-4 w-4" /> Send on WhatsApp
+            </ButtonLink>
           )}
         </div>
       )}
