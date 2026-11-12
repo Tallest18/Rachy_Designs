@@ -96,7 +96,7 @@ These must be done before the website is shared with the public:
 - [ ] **Switch on email alerts for bookings** (free, takes about 2 minutes). → [Step-by-step](#switch-on-email-alerts-for-bookings)
 - [ ] **Make a test booking** on the live site and check that the email arrives. Check the Spam folder the first time and mark it "Not spam".
 - [ ] **Add real client reviews**, or leave the Reviews section hidden. → [How](#add-real-reviews)
-- [ ] **Add the exact TikTok and Facebook page links.** For now they open a search for "Rachy Designs". → [How](#change-social-media-links)
+- [x] **Add the Instagram, TikTok and Facebook links.** Done: @racheal_samuel0 on Instagram, @ra_chea_l on TikTok, plus the Facebook page. → [How to change them](#change-social-media-links)
 - [ ] **Check two details:** Racheal is described as *"Founder, Rachy Designs"*, and the booking form offers a *"Remote"* option (consult over WhatsApp and send measurements). Change or remove either if it isn't right.
 
 ---
@@ -217,12 +217,17 @@ While it says `true`, the Reviews section only shows on your computer, never on 
 
 ### Change social media links
 
-In the **Contact** part of `src/content.ts`, replace the `url:` values with the real profile addresses, for example:
+The links live in the **Contact** part of `src/content.ts`:
 
 ```ts
-  tiktok: { handle: '@rachydesigns', url: 'https://www.tiktok.com/@rachydesigns' },
-  facebook: { handle: 'Rachy Designs', url: 'https://www.facebook.com/rachydesigns' },
+  instagram: { handle: '@racheal_samuel0', url: 'https://www.instagram.com/racheal_samuel0' },
+  tiktok: { handle: '@ra_chea_l', url: 'https://www.tiktok.com/@ra_chea_l' },
+  facebook: { handle: 'Rachy Designs', url: 'https://www.facebook.com/share/1Dv9h7aKnD/' },
 ```
+
+- `handle` is the name shown on the page, and `url` is where the link goes.
+- When copying a link from the Instagram or TikTok app, remove anything after a `?` (e.g. `?psln=…` or `?igsh=…`). It's only tracking information.
+- Also update the same links in [`index.html`](index.html) (the `"sameAs"` list) so Google connects the profiles to the website.
 
 ### Change the logo
 

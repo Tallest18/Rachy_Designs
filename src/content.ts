@@ -85,10 +85,9 @@ export const contact = {
   phoneHref: 'tel:+2348135837929',
   /** International format, digits only (234 + number without the leading 0). */
   whatsapp: '2348135837929',
-  instagram: { handle: '@rachy_designs', url: 'https://www.instagram.com/rachy_designs' },
-  // Replace these two search links with the exact profile URLs once confirmed.
-  tiktok: { handle: 'Rachy Designs', url: 'https://www.tiktok.com/search?q=Rachy%20Designs' },
-  facebook: { handle: 'Rachy Designs', url: 'https://www.facebook.com/search/top?q=Rachy%20Designs' },
+  instagram: { handle: '@racheal_samuel0', url: 'https://www.instagram.com/racheal_samuel0' },
+  tiktok: { handle: '@ra_chea_l', url: 'https://www.tiktok.com/@ra_chea_l' },
+  facebook: { handle: 'Rachy Designs', url: 'https://www.facebook.com/share/1Dv9h7aKnD/' },
   location: {
     short: 'UNIBEN, Benin City',
     full: 'University of Benin (UNIBEN), Benin City, Edo State, Nigeria',
